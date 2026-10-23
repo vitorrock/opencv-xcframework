@@ -1,0 +1,41 @@
+diff --git a/platforms/ios/Info.plist.in b/platforms/ios/Info.plist.in
+index a166934..173ee62 100644
+--- a/platforms/ios/Info.plist.in
++++ b/platforms/ios/Info.plist.in
+@@ -2,6 +2,10 @@
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0">
+ <dict>
++    <key>CFBundleExecutable</key>
++    <string>opencv2</string>
++    <key>MinimumOSVersion</key>
++    <string>16.0</string>
+     <key>CFBundleName</key>
+     <string>${OPENCV_APPLE_BUNDLE_NAME}</string>
+     <key>CFBundleIdentifier</key>
+diff --git a/platforms/ios/build_framework.py b/platforms/ios/build_framework.py
+index 1904a67..547f602 100644
+--- a/platforms/ios/build_framework.py
++++ b/platforms/ios/build_framework.py
+@@ -410,7 +410,9 @@ class Builder:
+             shutil.rmtree(framework_dir)
+         os.makedirs(framework_dir)
+ 
+-        if self.dynamic:
++        # iOS does not accept the versioned macOS bundle layout, so iOS frameworks are always flat.
++        flat_bundle = self.dynamic or isinstance(self, iOSBuilder)
++        if flat_bundle:
+             dstdir = framework_dir
+         else:
+             dstdir = os.path.join(framework_dir, "Versions", "A")
+@@ -458,8 +460,8 @@ class Builder:
+         print("Creating universal library from:\n\t%s" % "\n\t".join(libs), file=sys.stderr)
+         execute(lipocmd)
+ 
+-        # dynamic framework has different structure, just copy the Plist directly
+-        if self.dynamic:
++        # flat framework has different structure, just copy the Plist directly
++        if flat_bundle:
+             resdir = dstdir
+             shutil.copyfile(self.getInfoPlist(builddirs), os.path.join(resdir, "Info.plist"))
+         else:

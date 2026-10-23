@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag. Leave empty to use the OpenCV version in .version.
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    timeout-minutes: 240
+    env:
+      IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+      # Some OpenCV third-party CMake files declare a minimum version that CMake 4 rejects.
+      CMAKE_POLICY_VERSION_MINIMUM: "3.5"
+
+    steps:
+      - name: Checkout package
+        uses: actions/checkout@v4
+        with:
+          path: package
+
+      - name: Resolve version
+        id: version
+        working-directory: package
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          opencv_version=$(cat .version)
+          tag=${INPUT_TAG:-$opencv_version}
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "::error::Tag $tag already exists. Pass a new tag, e.g. $opencv_version-1."
+            exit 1
+          fi
+          echo "opencv=$opencv_version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout OpenCV
+        uses: actions/checkout@v4
+        with:
+          repository: opencv/opencv
+          ref: refs/tags/${{ steps.version.outputs.opencv }}
+          path: opencv
+
+      - name: Build xcframework
+        working-directory: opencv
+        run: |
+          git apply ../package/patches/*.patch
+          python3 platforms/apple/build_xcframework.py \
+            --out build \
+            --build_only_specified_archs \
+            --iphoneos_archs arm64 \
+            --iphonesimulator_archs arm64 \
+            --disable-bitcode
+          cd build
+          zip -ry "$GITHUB_WORKSPACE/opencv2.xcframework.zip" opencv2.xcframework
+
+      - name: Publish release
+        working-directory: package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          OPENCV_VERSION: ${{ steps.version.outputs.opencv }}
+        run: |
+          zip_path="$GITHUB_WORKSPACE/opencv2.xcframework.zip"
+          checksum=$(swift package compute-checksum "$zip_path")
+          sed -i '' \
+            -e "s/^let version = .*/let version = \"$TAG\"/" \
+            -e "s/^let checksum = .*/let checksum = \"$checksum\"/" \
+            Package.swift
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Release $TAG"
+          git tag "$TAG"
+          git push origin "HEAD:$GITHUB_REF_NAME" "$TAG"
+          gh release create "$TAG" "$zip_path" --title "$TAG" --notes "OpenCV $OPENCV_VERSION for iOS (device and simulator, arm64)."

@@ -1,0 +1,15 @@
+diff --git a/modules/objc/generator/gen_objc.py b/modules/objc/generator/gen_objc.py
+--- a/modules/objc/generator/gen_objc.py
++++ b/modules/objc/generator/gen_objc.py
+@@ -1456,9 +1456,9 @@
+         self.save(opencv_header_file, opencv_header)
+         opencv_modulemap_file = os.path.join(output_objc_path, framework_name + ".modulemap")
+         opencv_modulemap = "framework module " + framework_name + " {\n"
+-        opencv_modulemap += "  umbrella header \"" + framework_name + ".h\"\n"
++        opencv_modulemap += "  header \"" + framework_name + ".h\"\n"
+         opencv_modulemap += "\n".join(["  header \"%s\"" % os.path.basename(f) for f in self.header_files])
+-        opencv_modulemap += "\n  export *\n  module * {export *}\n}\n"
++        opencv_modulemap += "\n  export *\n}\n"
+         self.save(opencv_modulemap_file, opencv_modulemap)
+         available_modules = " ".join(["-DAVAILABLE_" + m['name'].upper() for m in config['modules']])
+         cmakelist_template = read_contents(os.path.join(SCRIPT_DIR, 'templates/cmakelists.template'))
