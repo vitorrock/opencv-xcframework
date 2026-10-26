@@ -19,6 +19,7 @@
 
 - `modulemap-explicit-headers.patch`: the module map lists every header explicitly instead of using an umbrella header. This removes the `-Wincomplete-umbrella` warnings in the apps that import `opencv2`.
 - `ios-flat-framework-bundle.patch`: the iOS framework uses the flat bundle layout and its `Info.plist` has `CFBundleExecutable` and `MinimumOSVersion`. Xcode rejects the versioned macOS layout for iOS.
+- `ios27-pixel-buffer-adaptor-deprecation.patch`: silences the iOS 27 deprecation warning of `AVAssetWriterInputPixelBufferAdaptor` in `CvCamera2.h`.
 
 ## Release
 

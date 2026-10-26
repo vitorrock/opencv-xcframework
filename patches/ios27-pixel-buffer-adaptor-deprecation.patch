@@ -1,0 +1,16 @@
+diff --git a/modules/videoio/misc/objc/ios/CvCamera2.h b/modules/videoio/misc/objc/ios/CvCamera2.h
+index e4ec03b..70cd18f 100644
+--- a/modules/videoio/misc/objc/ios/CvCamera2.h
++++ b/modules/videoio/misc/objc/ios/CvCamera2.h
+@@ -62,7 +62,11 @@ CV_EXPORTS @interface CvVideoCamera2 : CvAbstractCamera2<AVCaptureVideoDataOutpu
+ @property (nonatomic, assign) BOOL recordVideo;
+ @property (nonatomic, assign) BOOL rotateVideo;
+ @property (nonatomic, strong) AVAssetWriterInput* recordAssetWriterInput;
++// iOS 27 deprecates AVAssetWriterInputPixelBufferAdaptor. Keep the property for API compatibility.
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+ @property (nonatomic, strong) AVAssetWriterInputPixelBufferAdaptor* recordPixelBufferAdaptor;
++#pragma clang diagnostic pop
+ @property (nonatomic, strong) AVAssetWriter* recordAssetWriter;
+ - (void)adjustLayoutToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation;
+ - (void)layoutPreviewLayer;
