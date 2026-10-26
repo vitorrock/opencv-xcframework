@@ -2,8 +2,8 @@
 
 import PackageDescription
 
-let version = "4.12.0"
-let checksum = "735c5f16733b13a0402cd5db442456052ab2eb4850fed3487efcff65827e3465"
+let version = "4.12.0-1"
+let checksum = "0be9e42bb68159c698f14e5b36e55d75d139abbc86f91f44d593a6d2560a4ed6"
 
 let package = Package(
 	name: "opencv-xcframework",
